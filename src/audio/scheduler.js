@@ -17,7 +17,10 @@ export default class StepScheduler {
     this._pendingStep = 0;
   }
 
-  static stepMs(bpm) { return (60 / bpm / 4) * 1000; }
+  static stepMs(bpm) {
+    const safe = Math.max(20, Math.min(400, Number(bpm) || 120));
+    return (60 / safe / 4) * 1000;
+  }
 
   durationForStep(step = this.step) {
     const swing = Math.max(0, Math.min(0.5, this.swing));
@@ -26,10 +29,11 @@ export default class StepScheduler {
 
   start(bpm, stepsPerLoop = 16, fromStep = 0) {
     this.stop();
-    this.stepsPerLoop = stepsPerLoop;
+    this.setStepsPerLoop(stepsPerLoop);
     this.baseStepDuration = StepScheduler.stepMs(bpm);
-    this.stepDuration = this.durationForStep(fromStep);
-    this.step = fromStep % this.stepsPerLoop;
+    const from = Number.isFinite(fromStep) ? Math.max(0, Math.floor(fromStep)) % this.stepsPerLoop : 0;
+    this.stepDuration = this.durationForStep(from);
+    this.step = from;
     this._pendingStep = this.step;
     this.running = true;
     this.nextStepTime = now();

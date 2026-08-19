@@ -14,7 +14,9 @@
     "web:export": "expo export --platform web",
     "windows": "npm run samples && npm run web:export && electron electron/main.cjs",
     "windows:dist": "npm run samples && npm run web:export && electron-builder --win",
-    "test:scheduler": "node scripts/test_scheduler.mjs"
+    "test:scheduler": "node scripts/test_scheduler.mjs",
+    "test:regressions": "node scripts/test_regressions.mjs",
+    "test": "npm run test:scheduler && npm run test:regressions"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "~2.2.0",
