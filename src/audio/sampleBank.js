@@ -32,11 +32,12 @@ export const SEQ_TRACKS = [
   { id: 'hat', label: 'HAT', padId: 'hatClosed', group: 'hat' },
   { id: 'synth', label: 'SYNTH', padId: 'stab', group: 'synth' },
 ];
+const pad64 = (arr) => [...arr, ...new Array(64 - arr.length).fill(0)];
 export const DEFAULT_PATTERN = {
-  kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0],
-  snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-  hat: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1],
-  synth: [0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0],
+  kick: pad64([1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0]),
+  snare: pad64([0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]),
+  hat: pad64([1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1]),
+  synth: pad64([0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0]),
 };
-export const STEPS = 16;
+export const STEPS = 64;
 export const TOTAL_ASSETS = PADS.length + Object.keys(EXTRA).length + STEMS.length * 2;
