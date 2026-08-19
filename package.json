@@ -53,10 +53,7 @@
       "output": "release"
     },
     "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
+      "target": ["nsis", "portable"],
       "artifactName": "BeatForge-${version}-${arch}.${ext}"
     },
     "nsis": {
