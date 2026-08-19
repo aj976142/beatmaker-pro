@@ -4,7 +4,7 @@ import { ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View } fr
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AudioWaveform, Grid3x3, Disc3 } from 'lucide-react-native';
 import { C, RADIUS, SPACE } from './src/theme';
-import { PADS, SEQ_TRACKS, STEPS, DEFAULT_PATTERN, STEM_BPM } from './src/audio/sampleBank';
+import { PADS, SEQ_TRACKS, STEMS, STEPS, DEFAULT_PATTERN, STEM_BPM } from './src/audio/sampleBank';
 import useSoundEngine from './src/hooks/useSoundEngine';
 import useTransport from './src/hooks/useTransport';
 import useHistory from './src/hooks/useHistory';
@@ -17,6 +17,11 @@ import { saveProject } from './src/storage/projects';
 import { Transport, BpmSlider, VolumeSlider, RateSlider, StemBar, FxBar, HistoryBar } from './src/components/Controls';
 
 const clonePattern = (p) => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, [...v]]));
+/** Coerce a stored track into exactly STEPS 0/1 values, whatever was saved. */
+const normalizeTrack = (track) => {
+  const source = Array.isArray(track) ? track : [];
+  return Array.from({ length: STEPS }, (_, i) => (source[i] ? 1 : 0));
+};
 const emptyPattern = () => Object.fromEntries(SEQ_TRACKS.map((t) => [t.id, new Array(STEPS).fill(0)]));
 const DEFAULT_TRACK_VOLUMES = { kick: 1, snare: 1, hat: 1, synth: 1 };
 
@@ -38,7 +43,14 @@ function Studio() {
   const echoRef = useRef(echo); echoRef.current = echo; const echoTimers = useRef([]), bpmRef = useRef(bpm); bpmRef.current = bpm;
   const triggerPad = useCallback((id) => { trigger(id, 1); if (echoRef.current) { const eighth = (60 / bpmRef.current / 2) * 1000; [{ d: eighth, v: 0.42 }, { d: eighth * 2, v: 0.18 }].forEach(({ d, v }) => echoTimers.current.push(setTimeout(() => trigger(id, v), d))); if (echoTimers.current.length > 64) echoTimers.current = echoTimers.current.slice(-64); } }, [trigger]);
   useEffect(() => () => { echoTimers.current.forEach(clearTimeout); echoTimers.current = []; }, []);
-  useEffect(() => { if (!ready) return; engine.current?.setMasterVolume(volume); engine.current?.setRate(rate); engine.current?.setAllStemsFilter(lpf); SEQ_TRACKS.forEach((track) => engine.current?.setGroupVolume(track.group, trackVolumes[track.id] ?? 1)); Object.entries(activeStems).forEach(([id, active]) => engine.current?.setStemActive(id, !!active)); }, [ready, engine, volume, rate, lpf, activeStems, trackVolumes]);
+  // Apply audio settings in focused effects. A single combined effect re-sent
+  // every setting on any change, so nudging the master volume also issued a
+  // setRate across all ~57 loaded Sound objects and re-asserted every stem.
+  useEffect(() => { if (ready) engine.current?.setMasterVolume(volume); }, [ready, engine, volume]);
+  useEffect(() => { if (ready) engine.current?.setRate(rate); }, [ready, engine, rate]);
+  useEffect(() => { if (ready) engine.current?.setAllStemsFilter(lpf); }, [ready, engine, lpf]);
+  useEffect(() => { if (ready) SEQ_TRACKS.forEach((track) => engine.current?.setGroupVolume(track.group, trackVolumes[track.id] ?? 1)); }, [ready, engine, trackVolumes]);
+  useEffect(() => { if (ready) STEMS.forEach((stem) => engine.current?.setStemActive(stem.id, !!activeStems[stem.id])); }, [ready, engine, activeStems]);
   const fireRiser = useCallback(() => trigger('fxRiser', 1), [trigger]); const fireVinyl = useCallback(() => trigger('vinylStop', 1), [trigger]);
   const toggleStep = useCallback((trackId, index) => history.setState((prev) => { const next = clonePattern(prev); next[trackId][index] = next[trackId][index] ? 0 : 1; return next; }), [history.setState]);
   const toggleMute = useCallback((trackId) => setMutes((prev) => ({ ...prev, [trackId]: !prev[trackId] })), []);
@@ -48,7 +60,7 @@ function Studio() {
   const newProject = useCallback(() => { stop(); setProjectId(null); setProjectName('Unsaved Beat'); history.reset(clonePattern(DEFAULT_PATTERN)); setSequenceLength(16); setSwing(0); setMutes({}); setTrackVolumes(DEFAULT_TRACK_VOLUMES); setBpm(120); setVolume(0.85); setRate(1); setActiveStems({}); setLpf(false); setEcho(false); setHydrated(true); }, [stop, history.reset, setBpm]);
   const buildSnapshot = useCallback((id, name) => ({ id, name, schemaVersion: 3, bpm, pattern: clonePattern(pattern), sequenceLength, swing, mutes: { ...mutes }, trackVolumes: { ...trackVolumes }, volume, rate, activeStems: { ...activeStems }, lpf, echo }), [bpm, pattern, sequenceLength, swing, mutes, trackVolumes, volume, rate, activeStems, lpf, echo]);
   const handleSave = useCallback(async (name) => { const id = projectId || `project-${Date.now()}`; const saved = await saveProject(buildSnapshot(id, name)); setProjectId(saved.id); setProjectName(saved.name); setHydrated(true); }, [projectId, buildSnapshot]);
-  const handleLoad = useCallback((project) => { stop(); setProjectId(project.id); setProjectName(project.name || 'My Beat'); const loadedPattern = clonePattern(project.pattern || DEFAULT_PATTERN); history.reset(Object.fromEntries(SEQ_TRACKS.map((t) => [t.id, [...(loadedPattern[t.id] || []), ...new Array(STEPS - (loadedPattern[t.id] || []).length).fill(0)].slice(0, STEPS)]))); setSequenceLength([16, 32, 64].includes(Number(project.sequenceLength)) ? Number(project.sequenceLength) : 16); setSwing(typeof project.swing === 'number' ? Math.max(0, Math.min(0.3, project.swing)) : 0); setMutes(project.mutes || {}); setTrackVolumes({ ...DEFAULT_TRACK_VOLUMES, ...(project.trackVolumes || {}) }); setBpm(Number(project.bpm) || 120); setVolume(typeof project.volume === 'number' ? project.volume : 0.85); setRate(typeof project.rate === 'number' ? project.rate : 1); setActiveStems(project.activeStems || {}); setLpf(!!project.lpf); setEcho(!!project.echo); setHydrated(true); }, [stop, history.reset, setBpm]);
+  const handleLoad = useCallback((project) => { stop(); setProjectId(project.id); setProjectName(project.name || 'My Beat'); const loadedPattern = (project.pattern && typeof project.pattern === 'object') ? project.pattern : DEFAULT_PATTERN; history.reset(Object.fromEntries(SEQ_TRACKS.map((t) => [t.id, normalizeTrack(loadedPattern[t.id])]))); setSequenceLength([16, 32, 64].includes(Number(project.sequenceLength)) ? Number(project.sequenceLength) : 16); setSwing(typeof project.swing === 'number' ? Math.max(0, Math.min(0.3, project.swing)) : 0); setMutes(project.mutes || {}); setTrackVolumes({ ...DEFAULT_TRACK_VOLUMES, ...(project.trackVolumes || {}) }); setBpm(Number(project.bpm) || 120); setVolume(typeof project.volume === 'number' ? project.volume : 0.85); setRate(typeof project.rate === 'number' ? project.rate : 1); setActiveStems(project.activeStems || {}); setLpf(!!project.lpf); setEcho(!!project.echo); setHydrated(true); }, [stop, history.reset, setBpm]);
   useEffect(() => { if (!hydrated || !projectId) return undefined; const timer = setTimeout(() => saveProject(buildSnapshot(projectId, projectName)), 900); return () => clearTimeout(timer); }, [hydrated, projectId, projectName, buildSnapshot]);
   useEffect(() => { if (!ready && playing) stop(); }, [ready, playing, stop]);
   const padSize = useMemo(() => (Math.min(width, 520) - SPACE.lg * 2) / 4, [width]); if (!ready) return <LoadingScreen progress={progress} error={error} />; const stemsOn = Object.values(activeStems).filter(Boolean).length;

@@ -4,6 +4,14 @@ import { FolderOpen, Save, Plus, Trash2, X } from 'lucide-react-native';
 import { C, RADIUS, SPACE } from '../theme';
 import { deleteProject, listProjects } from '../storage/projects';
 
+/** Records saved before updatedAt existed rendered a literal "Invalid Date". */
+const formatSaved = (value) => {
+  const ms = Number(value);
+  if (!Number.isFinite(ms) || ms <= 0) return '';
+  const date = new Date(ms);
+  return Number.isNaN(date.getTime()) ? '' : ` · ${date.toLocaleString()}`;
+};
+
 const Button = ({ children, onPress, accent = C.line }) => (
   <Pressable onPress={onPress} style={[styles.button, { borderColor: accent }]}>{children}</Pressable>
 );
@@ -62,7 +70,7 @@ export default function ProjectBar({ projectName, onSave, onNew, onLoad }) {
           {projects.length === 0 ? <Text style={styles.empty}>No saved projects yet.</Text> : projects.map((project) => <View key={project.id} style={styles.projectRow}>
             <Pressable style={styles.projectInfo} onPress={() => { onLoad(project); setLibraryOpen(false); }}>
               <Text style={styles.projectName}>{project.name}</Text>
-              <Text style={styles.meta}>{Math.round(project.bpm || 120)} BPM · {new Date(project.updatedAt).toLocaleString()}</Text>
+              <Text style={styles.meta}>{Math.round(Number(project.bpm) || 120)} BPM{formatSaved(project.updatedAt)}</Text>
             </Pressable>
             <Pressable onPress={() => remove(project.id)} style={styles.delete}><Trash2 size={15} color={C.red} /></Pressable>
           </View>)}

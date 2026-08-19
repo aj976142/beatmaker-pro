@@ -6,7 +6,12 @@ export async function listProjects() {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     const projects = raw ? JSON.parse(raw) : [];
-    return Array.isArray(projects) ? projects.sort((a, b) => b.updatedAt - a.updatedAt) : [];
+    if (!Array.isArray(projects)) return [];
+    // Drop malformed entries and treat a missing timestamp as 0, otherwise the
+    // NaN comparisons leave the library in an arbitrary order.
+    return projects
+      .filter((p) => p && typeof p === 'object' && p.id)
+      .sort((a, b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0));
   } catch {
     return [];
   }
