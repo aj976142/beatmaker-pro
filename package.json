@@ -41,25 +41,10 @@
   "build": {
     "appId": "com.beatmaker.beatforge",
     "productName": "BeatForge",
-    "extraMetadata": {
-      "main": "electron/main.cjs"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "directories": {
-      "output": "release"
-    },
-    "win": {
-      "target": ["nsis", "portable"],
-      "artifactName": "BeatForge-${version}-${arch}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "extraMetadata": { "main": "electron/main.cjs" },
+    "files": ["dist/**/*", "electron/**/*", "package.json"],
+    "directories": { "output": "release" },
+    "win": { "target": ["nsis", "portable"], "artifactName": "BeatForge-${version}-${arch}.${ext}" },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true }
   }
 }
