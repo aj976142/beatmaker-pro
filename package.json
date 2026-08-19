@@ -1,7 +1,7 @@
 {
   "name": "beat-maker-pro",
   "version": "1.0.0",
-  "main": "electron/main.cjs",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -12,7 +12,7 @@
     "prebuild": "expo prebuild --platform android --clean",
     "build:apk": "eas build -p android --profile preview",
     "web:export": "expo export --platform web",
-    "windows": "npm run samples && npm run web:export && electron .",
+    "windows": "npm run samples && npm run web:export && electron electron/main.cjs",
     "windows:dist": "npm run samples && npm run web:export && electron-builder --win",
     "test:scheduler": "node scripts/test_scheduler.mjs"
   },
@@ -41,6 +41,9 @@
   "build": {
     "appId": "com.beatmaker.beatforge",
     "productName": "BeatForge",
+    "extraMetadata": {
+      "main": "electron/main.cjs"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*",
