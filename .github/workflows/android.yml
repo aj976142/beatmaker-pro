@@ -10,16 +10,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.19.5
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Normalize Expo SDK dependencies
+        run: npx expo install --fix --npm
       - run: npm run samples
       - run: npx expo prebuild --platform android --clean --non-interactive
       - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: beatforge-android-apk
