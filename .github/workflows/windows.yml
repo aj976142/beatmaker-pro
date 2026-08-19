@@ -14,13 +14,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.19.5
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Normalize Expo SDK dependencies
+        run: npx expo install --fix --npm
       - name: Generate audio samples
         run: npm run samples
       - name: Export Expo web app
