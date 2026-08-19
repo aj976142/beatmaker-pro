@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "samples": "python3 scripts/gen_samples.py",
+    "samples": "python scripts/gen_samples.py",
     "prebuild": "expo prebuild --platform android --clean",
     "build:apk": "eas build -p android --profile preview",
     "web:export": "expo export --platform web",
