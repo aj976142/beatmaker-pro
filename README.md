@@ -4,10 +4,10 @@ BeatForge is a mobile-first beat maker built with Expo/React Native. The same pr
 
 ## Platforms
 
-- **Android:** Expo / React Native native app, with a release APK build in GitHub Actions.
-- **Windows:** Electron desktop app using the Expo web build, with both an NSIS installer and portable `.exe` artifact.
+- Android native app with a release APK workflow.
+- Windows desktop app with NSIS installer and portable EXE workflows.
 
-## Run on Android
+## Android
 
 ```bash
 npm install
@@ -15,7 +15,7 @@ npm run samples
 npx expo start --android
 ```
 
-For a native release build locally:
+Release build:
 
 ```bash
 npm run samples
@@ -23,45 +23,29 @@ npx expo prebuild --platform android --clean
 npx expo run:android --variant release
 ```
 
-## Run on Windows
-
-Windows development requires Node.js and Python 3.10+.
+## Windows
 
 ```powershell
 npm install
 npm run windows
 ```
 
-This generates the sample bank, exports the Expo web app, and opens BeatForge in Electron.
-
-Build a Windows installer and portable executable:
+Build installer + portable EXE:
 
 ```powershell
 npm run windows:dist
 ```
 
-Artifacts are written to `release/`.
-
 ## Audio assets
 
-The repository does not need to store generated WAV binaries. `scripts/gen_samples.py` creates the 26 required sounds locally using Python's standard library. This keeps the Git repository small and makes clean Android/Windows builds reproducible.
+The generated 26-file WAV bank is created by `scripts/gen_samples.py` using Python's standard library, so the repository stays small and clean builds can recreate the audio assets.
 
-## GitHub builds
+## GitHub Actions
 
-Pushes to `main` run project checks. The Android and Windows workflows can also be started from **Actions → Run workflow**.
+- Android: generates samples, runs Expo prebuild, builds a release APK with Gradle, and uploads it as an artifact.
+- Windows: generates samples, exports the Expo web build, packages Electron as an NSIS installer and portable EXE, and uploads both.
+- Preflight: generates samples and verifies the Expo web bundle and scheduler syntax.
 
-- **Android workflow:** generates the audio bank, creates the native Android project, builds a release APK with Gradle, and uploads it as an artifact.
-- **Windows workflow:** generates the audio bank, exports the web app, builds an NSIS installer and a portable `.exe`, and uploads both.
+## Features
 
-## Current feature set
-
-- 16 performance pads
-- 16-step / 4-track sequencer
-- BPM slider and tap tempo
-- master volume and playback rate
-- beat-synced loop stems
-- LPF, echo, riser and vinyl FX
-- pooled audio voices for overlapping hits
-- drift-compensated sequencer scheduler
-- Android native build
-- Windows desktop packaging
+16 pads, 16-step / 4-track sequencer, BPM/tap tempo, volume, playback rate, beat-synced stems, LPF, echo, riser, vinyl FX, pooled voices, and drift-compensated scheduling.
