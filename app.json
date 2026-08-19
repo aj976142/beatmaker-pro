@@ -1,24 +1,39 @@
 {
   "expo": {
-    "name": "Beat Maker Pro",
-    "slug": "beat-maker-pro",
+    "name": "BeatForge",
+    "slug": "beatforge",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#07070C",
-    "assetBundlePatterns": ["assets/**/*"],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "android": {
-      "package": "com.beatmaker.pro",
+      "package": "com.beatmaker.beatforge",
       "versionCode": 1,
-      "adaptiveIcon": {"backgroundColor": "#07070C"},
+      "adaptiveIcon": {
+        "backgroundColor": "#07070C"
+      },
       "edgeToEdgeEnabled": true
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.beatmaker.pro",
-      "infoPlist": {"UIBackgroundModes": []}
+      "bundleIdentifier": "com.beatmaker.beatforge",
+      "infoPlist": {
+        "UIBackgroundModes": []
+      }
     },
-    "plugins": [["expo-av", {"microphonePermission": false}]],
-    "experiments": {"typedRoutes": false}
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
   }
 }
