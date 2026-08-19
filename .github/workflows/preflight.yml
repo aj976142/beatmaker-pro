@@ -10,10 +10,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20.19.5
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: npm install --legacy-peer-deps --no-audit --no-fund
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Normalize Expo SDK dependencies
+        run: npx expo install --fix --npm
       - run: npm run samples
       - run: node --check src/audio/scheduler.js
       - run: npm run web:export
