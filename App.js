@@ -22,6 +22,8 @@ function Studio() {
   const { width } = useWindowDimensions();
   const { engine, ready, progress, error, trigger } = useSoundEngine();
   const [pattern, setPattern] = useState(() => clonePattern(DEFAULT_PATTERN));
+  const [sequenceLength, setSequenceLength] = useState(16);
+  const [swing, setSwing] = useState(0);
   const [mutes, setMutes] = useState({});
   const [volume, setVolume] = useState(0.85);
   const [rate, setRate] = useState(1);
@@ -37,14 +39,14 @@ function Studio() {
   const readyRef = useRef(ready); readyRef.current = ready;
 
   const onStepFired = useCallback((step) => {
-    if (!readyRef.current) return;
+    if (!readyRef.current || step >= sequenceLength) return;
     const pat = patternRef.current, mut = mutesRef.current;
     for (let i = 0; i < SEQ_TRACKS.length; i += 1) {
       const track = SEQ_TRACKS[i];
       if (!mut[track.id] && pat[track.id][step]) trigger(track.padId, step % 4 === 0 ? 1 : 0.82);
     }
-  }, [trigger]);
-  const { bpm, setBpm, playing, toggle, stop, currentStep, tapTempo, tapCount } = useTransport({ onStepFired });
+  }, [trigger, sequenceLength]);
+  const { bpm, setBpm, playing, toggle, stop, currentStep, tapTempo, tapCount } = useTransport({ onStepFired, stepsPerLoop: sequenceLength, swing });
 
   const handleVolume = useCallback((v) => { setVolume(v); engine.current?.setMasterVolume(v); }, [engine]);
   const handleRate = useCallback((v) => { setRate(v); engine.current?.setRate(v); }, [engine]);
@@ -85,11 +87,18 @@ function Studio() {
     })])));
   }, []);
 
+  const changeSequenceLength = useCallback((value) => {
+    stop();
+    setSequenceLength(value);
+  }, [stop]);
+
   const newProject = useCallback(() => {
     stop();
     setProjectId(null);
     setProjectName('Unsaved Beat');
     setPattern(clonePattern(DEFAULT_PATTERN));
+    setSequenceLength(16);
+    setSwing(0);
     setMutes({});
     setBpm(120);
     setVolume(0.85);
@@ -103,16 +112,18 @@ function Studio() {
   const buildSnapshot = useCallback((id, name) => ({
     id,
     name,
-    schemaVersion: 1,
+    schemaVersion: 2,
     bpm,
     pattern: clonePattern(pattern),
+    sequenceLength,
+    swing,
     mutes: { ...mutes },
     volume,
     rate,
     activeStems: { ...activeStems },
     lpf,
     echo,
-  }), [bpm, pattern, mutes, volume, rate, activeStems, lpf, echo]);
+  }), [bpm, pattern, sequenceLength, swing, mutes, volume, rate, activeStems, lpf, echo]);
 
   const handleSave = useCallback(async (name) => {
     const id = projectId || `project-${Date.now()}`;
@@ -126,7 +137,10 @@ function Studio() {
     stop();
     setProjectId(project.id);
     setProjectName(project.name || 'My Beat');
-    setPattern(clonePattern(project.pattern || DEFAULT_PATTERN));
+    const loadedPattern = clonePattern(project.pattern || DEFAULT_PATTERN);
+    setPattern(Object.fromEntries(SEQ_TRACKS.map((t) => [t.id, [...(loadedPattern[t.id] || []), ...new Array(STEPS - (loadedPattern[t.id] || []).length).fill(0)].slice(0, STEPS)])));
+    setSequenceLength([16, 32, 64].includes(Number(project.sequenceLength)) ? Number(project.sequenceLength) : 16);
+    setSwing(typeof project.swing === 'number' ? Math.max(0, Math.min(0.3, project.swing)) : 0);
     setMutes(project.mutes || {});
     setBpm(Number(project.bpm) || 120);
     setVolume(typeof project.volume === 'number' ? project.volume : 0.85);
@@ -137,7 +151,6 @@ function Studio() {
     setHydrated(true);
   }, [stop, setBpm]);
 
-  // Once a project has an id, changes are persisted automatically after a short pause.
   useEffect(() => {
     if (!hydrated || !projectId) return undefined;
     const timer = setTimeout(() => saveProject(buildSnapshot(projectId, projectName)), 900);
@@ -159,11 +172,11 @@ function Studio() {
       <ProjectBar projectName={projectName} onSave={handleSave} onNew={newProject} onLoad={handleLoad} />
       <Transport playing={playing} onToggle={toggle} bpm={bpm} onTapTempo={tapTempo} tapCount={tapCount} onClear={clearPattern} onRandom={randomPattern} />
       <Section icon={<Grid3x3 size={12} color={C.textFaint} />} title="PERFORMANCE PADS"><View style={styles.padGrid}>{PADS.map((pad) => <Pad key={pad.id} pad={pad} size={padSize} onTrigger={triggerPad} />)}</View></Section>
-      <Section icon={<Grid3x3 size={12} color={C.textFaint} />} title="16-STEP SEQUENCER"><Sequencer pattern={pattern} onToggleStep={toggleStep} currentStep={playing ? currentStep : -1} mutes={mutes} onToggleMute={toggleMute} /></Section>
+      <Section icon={<Grid3x3 size={12} color={C.textFaint} />} title={`${sequenceLength}-STEP SEQUENCER`}><Sequencer pattern={pattern} onToggleStep={toggleStep} currentStep={playing ? currentStep : -1} mutes={mutes} onToggleMute={toggleMute} steps={sequenceLength} onStepsChange={changeSequenceLength} swing={swing} onSwingChange={setSwing} /></Section>
       <Section icon={<Disc3 size={12} color={C.textFaint} />} title="MIXER"><BpmSlider bpm={bpm} onChange={setBpm} /><VolumeSlider volume={volume} onChange={handleVolume} /><RateSlider rate={rate} onChange={handleRate} /></Section>
       <Section icon={<Disc3 size={12} color={C.textFaint} />} title="LOOP STEMS · BEAT-SYNCED"><StemBar activeStems={activeStems} onToggle={toggleStem} /></Section>
       <Section icon={<AudioWaveform size={12} color={C.textFaint} />} title="FILTER FX"><FxBar lpf={lpf} onLpf={toggleLpf} echo={echo} onEcho={() => setEcho((p) => !p)} onRiser={fireRiser} onVinyl={fireVinyl} /></Section>
-      <Text style={styles.footer}>Projects auto-save locally · 16 pads · 4 tracks · 4 stems</Text>
+      <Text style={styles.footer}>Projects auto-save locally · 16 pads · 4 tracks · 4/16-bar patterns · swing</Text>
     </ScrollView>
   </View>;
 }
