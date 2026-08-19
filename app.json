@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Beat Maker Pro",
+    "slug": "beat-maker-pro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#07070C",
+    "assetBundlePatterns": ["assets/**/*"],
+    "android": {
+      "package": "com.beatmaker.pro",
+      "versionCode": 1,
+      "adaptiveIcon": {"backgroundColor": "#07070C"},
+      "edgeToEdgeEnabled": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.beatmaker.pro",
+      "infoPlist": {"UIBackgroundModes": []}
+    },
+    "plugins": [["expo-av", {"microphonePermission": false}]],
+    "experiments": {"typedRoutes": false}
+  }
+}
