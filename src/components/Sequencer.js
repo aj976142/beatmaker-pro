@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { C, GROUP, RADIUS } from '../theme';
 import { SEQ_TRACKS } from '../audio/sampleBank';
 
@@ -30,7 +30,9 @@ function Sequencer({ pattern, onToggleStep, currentStep, mutes, onToggleMute, st
         <Pressable onPress={() => onToggleMute(track.id)} style={[styles.label, { borderColor: muted ? C.line : accent }]}>
           <Text style={{ color: muted ? C.textFaint : accent, fontSize: 9, fontWeight: '800' }}>{track.label}</Text>
         </Pressable>
-        {pattern[track.id].slice(0, steps).map((on, i) => <Step key={i} active={!!on && !muted} playhead={currentStep === i} downbeat={i % 4 === 0} accent={accent} onPress={() => onToggleStep(track.id, i)} />)}
+        <ScrollView horizontal showsHorizontalScrollIndicator={steps > 16} contentContainerStyle={styles.steps}>
+          {pattern[track.id].slice(0, steps).map((on, i) => <Step key={i} active={!!on && !muted} playhead={currentStep === i} downbeat={i % 4 === 0} accent={accent} onPress={() => onToggleStep(track.id, i)} />)}
+        </ScrollView>
       </View>;
     })}
   </View>;
@@ -51,7 +53,8 @@ const styles = StyleSheet.create({
   swingText: { color: C.textFaint, fontSize: 8, fontWeight: '800' },
   row: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   label: { width: 54, marginRight: 5, paddingVertical: 8, borderRadius: RADIUS.sm, borderWidth: 1, backgroundColor: C.panel, alignItems: 'center' },
-  hit: { flex: 1, paddingHorizontal: 2, paddingVertical: 3 },
+  steps: { flexDirection: 'row', minWidth: '100%' },
+  hit: { width: 30, paddingHorizontal: 2, paddingVertical: 3 },
   step: { height: 30, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: C.line, backgroundColor: C.bgElev },
   downbeat: { backgroundColor: C.panelHi, borderColor: C.lineHi },
   playhead: { borderColor: C.white, backgroundColor: '#2A2A3E' },
