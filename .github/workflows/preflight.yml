@@ -1,0 +1,19 @@
+name: Project checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: npm install
+      - run: npm run samples
+      - run: node --check src/audio/scheduler.js
+      - run: npm run web:export
