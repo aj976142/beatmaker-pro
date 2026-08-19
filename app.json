@@ -24,14 +24,6 @@
         "UIBackgroundModes": []
       }
     },
-    "plugins": [
-      [
-        "expo-av",
-        {
-          "microphonePermission": false
-        }
-      ]
-    ],
     "experiments": {
       "typedRoutes": false
     }
