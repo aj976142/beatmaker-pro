@@ -12,6 +12,9 @@ export default class StepScheduler {
     this.stepsPerLoop = 16;
     this.swing = 0;
     this.nextStepTime = 0;
+    // Index of the step that will fire next. `step` always holds the step
+    // currently sounding, so UI playheads and pattern lookups stay in sync.
+    this._pendingStep = 0;
   }
 
   static stepMs(bpm) { return (60 / bpm / 4) * 1000; }
@@ -26,7 +29,8 @@ export default class StepScheduler {
     this.stepsPerLoop = stepsPerLoop;
     this.baseStepDuration = StepScheduler.stepMs(bpm);
     this.stepDuration = this.durationForStep(fromStep);
-    this.step = fromStep % stepsPerLoop;
+    this.step = fromStep % this.stepsPerLoop;
+    this._pendingStep = this.step;
     this.running = true;
     this.nextStepTime = now();
     this._tick();
@@ -35,6 +39,7 @@ export default class StepScheduler {
   setStepsPerLoop(stepsPerLoop) {
     this.stepsPerLoop = Math.max(1, Math.min(64, Math.round(stepsPerLoop)));
     this.step %= this.stepsPerLoop;
+    this._pendingStep %= this.stepsPerLoop;
   }
 
   setSwing(value) {
@@ -75,14 +80,15 @@ export default class StepScheduler {
     if (!this.running) return;
     const t = now();
     const late = t - this.nextStepTime;
-    if (late > this.stepDuration * 4) {
+    if (this.stepDuration > 0 && late > this.stepDuration * 4) {
       const skip = Math.floor(late / this.stepDuration);
-      this.step = (this.step + skip) % this.stepsPerLoop;
+      this._pendingStep = (this._pendingStep + skip) % this.stepsPerLoop;
       this.nextStepTime += skip * this.stepDuration;
     }
+    this.step = this._pendingStep;
     this.onStep(this.step, this.nextStepTime);
-    this.step = (this.step + 1) % this.stepsPerLoop;
-    this.stepDuration = this.durationForStep(this.step);
+    this._pendingStep = (this.step + 1) % this.stepsPerLoop;
+    this.stepDuration = this.durationForStep(this._pendingStep);
     this.nextStepTime += this.stepDuration;
     this._schedule();
   };
