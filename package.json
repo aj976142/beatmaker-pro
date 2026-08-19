@@ -28,7 +28,8 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-svg": "15.12.1",
-    "react-native-worklets": "0.5.1"
+    "react-native-worklets": "0.5.1",
+    "react-native-web": "~0.21.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -36,8 +37,7 @@
     "babel-preset-expo": "~54.0.12",
     "electron": "^37.2.0",
     "electron-builder": "^26.0.12",
-    "react-dom": "^19.1.0",
-    "react-native-web": "^0.21.2"
+    "react-dom": "19.1.0"
   },
   "build": {
     "appId": "com.beatmaker.beatforge",
