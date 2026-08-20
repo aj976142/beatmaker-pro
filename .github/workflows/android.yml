@@ -13,17 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Do not enable Gradle caching here: the Android Gradle project is
+      # generated later by Expo prebuild, so setup-java cannot find Gradle files yet.
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20.19.5
+          node-version: '24'
           cache: npm
 
       - name: Set up Python
